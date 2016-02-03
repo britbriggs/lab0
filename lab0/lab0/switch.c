@@ -3,20 +3,17 @@
 #include <xc.h>
 #include "switch.h"
 
-#define Input 1
-#define Released 0
+#define INPUT 1
+#define RELEASED 0
+#define ENABLED 1
 
-void initSwitch1(){
-    
-    
-    TRISDbits.TRISD6=Input;
- //   PORTDbits.RD6=Released;
-    
-    IFS1bits.CNDIF=0;
-    CNPUDbits.CNPUD6=1;
-    CNCONDbits.ON=1;        // Turn on Change Notifications
-    CNENDbits.CNIED6=1;     //Enables CN for RD6
-    
-        
-    
+void initSW1(){
+    TRISDbits.TRISD6 = INPUT;           // Configure switch as input
+    CNCONDbits.ON = 1;                  // Enable overall interrupt
+    CNENDbits.CNIED6 = ENABLED;         // Enable pin CN
+    CNPUDbits.CNPUD6 = ENABLED;         // Enable pull-up resistor
+    IFS1bits.CNDIF = 0;                 // Put down the flag
+    IPC8bits.CNIP = 7;                  // Configure interrupt priority
+    IPC8bits.CNIS = 3;                  // Configure the interrupt sub-priority
+    IEC1bits.CNDIE = ENABLED;           // Enable interrupt for D pins
 }

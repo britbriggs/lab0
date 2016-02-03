@@ -16,10 +16,11 @@
 #define INPUT 1
 
 #define Enable 1
+#define DISABLE 0
 #define flagDown 0
 #define defaultPriority 7
 
-#define ON 1
+#define On 1
 #define OFF 0
 
 //TODO: Define states of the state machine
@@ -35,7 +36,7 @@ int main() {
 
     //TODO: Write each initialization function
     initLEDs();
-    initSwitch1();
+    initSW1();
     
     
     state = red;
@@ -46,7 +47,7 @@ int main() {
        switch (state){
        
         case red:
-            LATDbits.LATD0=ON;
+            LATDbits.LATD0=On;
             LATDbits.LATD1=OFF;
             LATDbits.LATD2=OFF;
             
@@ -54,14 +55,14 @@ int main() {
         
         case yellow:
             LATDbits.LATD0=OFF;
-            LATDbits.LATD1=ON;
+            LATDbits.LATD1=On;
             LATDbits.LATD2=OFF;
             break;
             
         case green:
             LATDbits.LATD0=OFF;
             LATDbits.LATD1=OFF;
-            LATDbits.LATD2=ON;
+            LATDbits.LATD2=On;
          break;
     } 
         
@@ -74,44 +75,65 @@ int main() {
 //TODO: Add interrupt service routines that manage the change of states
 //for particular events as needed
 void __ISR (_TIMER_1_VECTOR, IPL7SRS) _T1Interupt() {
+      
+    if(PORTDbits.RD6==1){
         
-    IFS0bits.T1IF=flagDown;
-    
-    switch(state){
-        case redInt:
-            state=yellow;
-            break;
+        IFS0bits.T1IF=flagDown;
+        switch(state){
+            case redInt:
+                state=green;
+                break;
             
-        case yellowInt:
-            state=green;
-            break;
+            case yellowInt:
+                state=red;
+                break;
             
-        case greenInt:
-            state=red;
-            break;
+            case greenInt:
+                state=yellow;
+                break;
         
-        default:
-            state = red;
-            break;
+            default:
+                state = red;
+                break;
+        }
     }
 }
 
     
  void __ISR(_CHANGE_NOTICE_VECTOR,IPL7SRS) _CNINterrupt(){
-    // initTimer1();
+     initTimer1();
      IFS1bits.CNDIF=0;
-     
+     if(PORTDbits.RD6==0){
+         
          switch(state){
              case red:
-                 state=yellow;
+                 state=redInt;
                  break;
              case yellow:
-                 state=green;
+                 state=yellowInt;
                  break;
              case green:
+                 state=greenInt;
+                 break;
+         }
+     }
+     
+     else if (PORTDbits.RD6==1){
+         IEC0bits.T1IE=DISABLE;
+         T1CONbits.ON=0;
+         
+         switch(state){
+             case redInt:
+                 state=yellow;
+                 break;
+             case yellowInt:
+                 state=green;
+                 break;
+             case greenInt:
                  state=red;
                  break;
          }
+     }
  
 }
 
